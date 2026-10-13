@@ -26,7 +26,7 @@ The builder accepts only these two archives in specific. The checksums have to m
 
 ## Quickstart
 
-Use the web builder or build from the source code. Both give the same executable.
+Use the web builder or build from the source code. Both options result in the same executable.
 
 **Web builder (no installation):**
 
