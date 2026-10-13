@@ -1,0 +1,26 @@
+{
+  "targets": [
+    {
+      "id": "linux-x86_64",
+      "label": "Linux (x86-64)",
+      "engine": "engines/sayooshi-linux-x86_64",
+      "output": "sayooshi",
+      "dist": "dist/linux-x86_64/sayooshi",
+      "size": 6866280,
+      "sha256": "f9668fd1c11f1053c8b8bf32435a7f22b86eae5b76ec3dfdb9220db9572d813e",
+      "game_size": 599069259,
+      "game_sha256": "36e5925e52d3747beb6b06b810d7feb39b91eb69b095029b0c24bd2073cfbd40"
+    },
+    {
+      "id": "windows-x86_64",
+      "label": "Windows (x86-64)",
+      "engine": "engines/Sayonara-windows-x86_64.exe",
+      "output": "Sayonara.exe",
+      "dist": "dist/windows-x86_64/Sayonara.exe",
+      "size": 6202880,
+      "sha256": "8a53cfd91f10d560c9173bbec02c5db4942f401d90f8d3bdbb023336f0c4f0ac",
+      "game_size": 598405859,
+      "game_sha256": "9509de32a5954c68cefb209c523fe2f86a31c49ddc3cb51ec0cebdd40eac3d7f"
+    }
+  ]
+}

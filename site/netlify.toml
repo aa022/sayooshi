@@ -1,0 +1,15 @@
+# Netlify: deploy this folder as is (drag and drop it in the Netlify UI, or `netlify deploy --dir site --prod`;
+# for a linked repo set the base directory to site/). It is a static site: no build command.
+[build]
+  publish = "."
+
+# The engines change only when site/engines/engines.json does; let browsers revalidate them.
+[[headers]]
+  for = "/engines/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"

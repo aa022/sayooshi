@@ -1,0 +1,39 @@
+# Valgrind suppressions for `make valgrind|helgrind|drd` (docs/CODE_STANDARD.md §10).
+# ONLY genuine third-party / libc noise belongs here, each entry with a justification. Never suppress engine code
+# (frames in engine/src): fix it instead.
+
+# libdbus (opened by SDL for screensaver/IME/portal services) waits on a condition variable whose mutex it
+# manages internally; helgrind cannot see that association and reports every wait. Third-party, not our code.
+{
+   libdbus-cond-wait-dubious
+   Helgrind:Dubious
+   ...
+   obj:*/libdbus-1.so*
+}
+# libdbus takes its connection and bus locks in a different order during dbus_connection_close (SDL_Quit) than
+# while dispatching; dbus serialises those paths itself (single-threaded use from the main thread here).
+{
+   libdbus-lock-order
+   Helgrind:LockOrder
+   ...
+   obj:*/libdbus-1.so*
+}
+
+# glibc's dynamic loader keeps bookkeeping (link maps, version tables, the ld.so.cache path strings) for the
+# libraries SDL dlopens (libdbus and its dependencies) after dlclose: dependencies stay loaded (NODELETE) and the
+# loader frees its own state only at process teardown. The valgrind build sets SDL_HINT_SHUTDOWN_DBUS_ON_QUIT
+# (plat/platform.c), so everything else libdbus allocated is released; this is ld.so memory, not ours.
+{
+   glibc-dlopen-bookkeeping
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_dl_open
+}
+{
+   glibc-dlclose-bookkeeping
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_dl_close
+}

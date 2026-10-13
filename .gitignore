@@ -1,0 +1,13 @@
+# build outputs
+/build/
+/dist/
+# game data must never be committed: original archives, extracted or decoded files
+*.zip
+*.pck
+*.g00
+*.nwa
+*.ovk
+*.pak
+Gameexe.dat
+Gameexe.ini
+__pycache__/
