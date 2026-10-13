@@ -17,10 +17,50 @@
       "engine": "engines/Sayonara-windows-x86_64.exe",
       "output": "Sayonara.exe",
       "dist": "dist/windows-x86_64/Sayonara.exe",
-      "size": 6202880,
-      "sha256": "8a53cfd91f10d560c9173bbec02c5db4942f401d90f8d3bdbb023336f0c4f0ac",
-      "game_size": 598405859,
-      "game_sha256": "9509de32a5954c68cefb209c523fe2f86a31c49ddc3cb51ec0cebdd40eac3d7f"
+      "size": 6237184,
+      "sha256": "95c23ea97f7cb5813d8cb48b951388788f991564c9ba3f451272dd51fcc2a247",
+      "game_size": 598440163,
+      "game_sha256": "18c079940d61907d69530f337fce0ac089d3bf95ead4d606202d6b0ffe785844"
+    },
+    {
+      "id": "macos-universal",
+      "label": "macOS (Apple silicon + Intel)",
+      "kind": "app",
+      "output": "Sayonara.app.zip",
+      "dist": "dist/macos-universal/Sayonara.app",
+      "files": [
+        {
+          "path": "Sayonara.app/Contents/Info.plist",
+          "engine": "engines/macos-universal/Contents/Info.plist",
+          "size": 830,
+          "sha256": "8ce111c8636e34375c15aab5cfb8e1a9e7d4cea963bb55d14d1c7979e826d1c8",
+          "mode": 420
+        },
+        {
+          "path": "Sayonara.app/Contents/MacOS/Sayonara",
+          "engine": "engines/macos-universal/Contents/MacOS/Sayonara",
+          "size": 11826480,
+          "sha256": "bf53cc20745cb9ef8e323c0683e90b21ca4762a63f80923a00b06e6c8b3027e8",
+          "mode": 493
+        },
+        {
+          "path": "Sayonara.app/Contents/Resources/Sayonara.icns",
+          "engine": "engines/macos-universal/Contents/Resources/Sayonara.icns",
+          "size": 240952,
+          "sha256": "4c8e02695babc25f7f5ed38df0a57a612055702882bb5b556f3ddc059129701f",
+          "mode": 420
+        },
+        {
+          "path": "Sayonara.app/Contents/_CodeSignature/CodeResources",
+          "engine": "engines/macos-universal/Contents/_CodeSignature/CodeResources",
+          "size": 2670,
+          "sha256": "26df93516e603ad414e9a4283e899fb853fa6a54804299c90fee3f5dea2642b7",
+          "mode": 420
+        }
+      ],
+      "payload_path": "Sayonara.app/Contents/Resources/game.pak",
+      "payload_size": 592202979,
+      "payload_sha256": "80e05697636406c3015c2a98e930e9e57c6a5f932b59dc9d6ed39fdaa4e65d3a"
     }
   ]
 }

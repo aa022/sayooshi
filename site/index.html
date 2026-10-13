@@ -3,47 +3,53 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sayonara o Oshiete builder</title>
+<title>Sayooshi Maker</title>
+<link rel="icon" href="favicon.ico">
 </head>
-<body>
-<h1>Sayonara o Oshiete builder</h1>
-<p>Turns your copy of <i>Sayonara o Oshiete ~Comment te Dire Adieu~</i> and the English patch into a single
-self-contained game executable for Linux or Windows, with both languages inside.</p>
-<p>Everything happens in this browser tab. Your files are not uploaded anywhere.</p>
+<body style="background: linear-gradient(to right, #d8d8d8, #fff)">
+<h1>Sayooshi Maker</h1>
+<p><i>Sayonara o Oshiete ~Comment te Dire Adieu~</i> <a href="https://vndb.org/v1200">vndb.org/v1200</a> natively ported for Linux, Windows and macOS</p>
+<p>Bring your own game ^^</p>
+<p>And the English <a href="https://vndb.org/r126122">patch</a> from sayooshiENG</p>
 
-<h2>1. Your files</h2>
-<p>
-<label>Game (JA download edition zip, 488 MB):<br>
-<input type="file" id="ja" accept=".zip"></label>
-</p>
-<p>
-<label>English patch v1.1 zip (7 MB):<br>
-<input type="file" id="en" accept=".zip"></label><br>
-Don't have it? <a href="https://www.mediafire.com/file/okv1bm6grp45hpy/SayonaraWoOshiete_EnglishPatch_v1.zip/file">Download
-the English patch</a> (MediaFire; the file is <code>SayonaraWoOshiete_EnglishPatch_v1.1.zip</code>, use it as downloaded).
-</p>
+<hr>
+<table cellpadding="0" cellspacing="0">
+<tr valign="top">
+<td><h2>game</h2>
+<p><label><input type="file" id="ja" accept=".zip"><br>
+<small><code>Sayonara-o-Oshiete-Comment-te-Dire-Adieu_Win_JA_Download-Edition.zip</code> (488 MB)</small></label></p></td>
+<td width="32"></td>
+<td><h2>english patch</h2>
+<p><label><input type="file" id="en" accept=".zip"><br>
+<small><code>SayonaraWoOshiete_EnglishPatch_v1.1.zip</code> (7 MB)</small></label><small>,
+<a href="https://www.mediafire.com/file/okv1bm6grp45hpy/SayonaraWoOshiete_EnglishPatch_v1.zip/file">get it here</a></small></p></td>
+</tr>
+</table>
 
-<h2>2. Target</h2>
-<p>
-<label>Build for:
-<select id="target"><option value="">loading…</option></select></label>
-</p>
+<hr>
+<h2>target</h2>
+<p><select id="target" aria-label="Target"><option value="">loading…</option></select></p>
 
-<h2>3. Build</h2>
+<hr>
+<h2>build</h2>
 <p><button id="build" disabled>Build</button></p>
-<p><progress id="progress" max="1" value="0"></progress> <span id="stage"></span></p>
+<p><progress id="progress" max="1" value="0"></progress><br><span id="stage"></span></p>
 <pre id="log"></pre>
-<ul id="downloads"></ul>
+<p id="downloads"></p>
 
-<h2>Notes</h2>
-<ul>
-<li>Only the exact original files are accepted; they are checked by size and SHA-256 before anything else.</li>
-<li>The result is about 570 MB. Building needs roughly 1.5 GB of free memory and takes under a minute.</li>
-<li>Linux: make the download executable first (<code>chmod +x sayooshi</code>), then run it.</li>
-<li>Windows: SmartScreen may warn about an unsigned program; choose "More info", then "Run anyway".</li>
-<li>Saves go to the per-user data folder; a folder named <code>saves</code> next to the executable keeps
-them there instead (portable mode).</li>
-</ul>
+<hr>
+<h2>notes</h2>
+<p>Only the exact original zips with matching checksums are accepted.<br>
+This tab needs about 1.5 GB of free memory.<br>
+Linux: <code>chmod +x sayooshi</code>, then run it.<br>
+Windows: if SmartScreen complains, More info, then Run anyway.<br>
+macOS: if it says "Not Opened", go to System Settings, Privacy &amp; Security, Open Anyway,<br>
+or run <code>xattr -dr com.apple.quarantine Sayonara.app</code>.
+When built <a href="https://github.com/aa022/sayooshi#quickstart">from source</a>, it just runs straight away.<br>
+Portable saves: make a <code>saves</code> folder next to the executable.</p>
+
+<hr>
+<p><a href="https://github.com/aa022/sayooshi">source</a><!--stamp--></p>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

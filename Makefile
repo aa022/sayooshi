@@ -160,8 +160,10 @@ help:
 	  '  make run                build the dev binary (no payload) and run it on build/data; RUN_ARGS=...' \
 	  '' \
 	  'Web builder (site/: static page that builds the games in the browser from the user'"'"'s archives)' \
-	  '  make site               build Linux + Windows, stage their payload-free engines in site/engines/' \
+	  '  make site               build this host + Windows, stage their payload-free engines in site/engines/' \
 	  '  make site-serve         serve site/ at http://localhost:8000 (SITE_PORT=...)' \
+	  '  make website            assemble the deployed site in build/website (what Netlify publishes)' \
+	  '  make website-serve      serve build/website at http://localhost:8000 (the builder is at /sayooshi/)' \
 	  '' \
 	  'Housekeeping' \
 	  '  make info               show the configuration (platform, compilers, pins, paths)' \
@@ -210,7 +212,7 @@ ifneq ($(INNER),1)
 
 .PHONY: build build-linux build-windows build-macos build-all run test lint format data deps payload toolchain-windows \
         clean fclean re info check check-windows check-macos check-linux dev test-saves valgrind helgrind drd fuzz \
-        site site-test site-serve
+        site site-test site-serve website website-serve
 
 build:
 	+$(Q)$(SELF) INNER=1 PLATFORM=$(HOST_PLATFORM) check-quiet dist
@@ -292,7 +294,7 @@ SITE_PORT ?= 8000
 site: build build-windows
 	@printf '\n==> site: stage the payload-free engines\n'
 	$(Q)python3 -I $(ROOT)/tools/site/stage.py $(HOSTTOOL) $(ROOT)
-	@printf 'Ready: site/ (deploy the folder as is; make site-serve to try it)\n'
+	@printf 'Ready: site/ (make site-serve to try it; commit and push to deploy)\n'
 
 site-test: site
 	$(NEED_DEVTOOLS)
@@ -310,6 +312,14 @@ site-test: site
 site-serve:
 	@printf 'Serving site/ at http://localhost:$(SITE_PORT)/  (Ctrl+C to stop)\n'
 	$(Q)cd $(ROOT)/site && python3 -m http.server $(SITE_PORT) --bind 127.0.0.1
+
+# build/website: the deployed site (netlify.toml runs the same script).
+website:
+	$(Q)sh $(ROOT)/tools/site/website.sh
+
+website-serve: website
+	@printf 'Serving build/website at http://localhost:$(SITE_PORT)/  (Ctrl+C to stop)\n'
+	$(Q)python3 -I $(ROOT)/tools/site/serve.py $(BUILD)/website $(SITE_PORT)
 
 toolchain-windows:
 	+$(Q)$(SELF) INNER=1 PLATFORM=windows-x86_64 toolchain
@@ -651,10 +661,10 @@ $(SDL_PREFIX)/lib/libSDL3.a: $(SDL_SRC)/CMakeLists.txt $(TOOLCHAIN_DEP)
 	   -DCMAKE_INSTALL_PREFIX="$(SDL_PREFIX)" -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 	   -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_TEST_LIBRARY=OFF -DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DSDL_INSTALL_DOCS=OFF \
 	   -DCMAKE_C_FLAGS="$(REPRO)" -DCMAKE_OBJC_FLAGS="$(REPRO)" \
-	   $(if $(filter macos,$(PLATFORM_OS)),,-DCMAKE_C_COMPILER="$(TCC)") $(CMAKE_EXTRA) $(if $(V),,>"$(DEPS_DIR)/$(PLATFORM)-cmake.log" 2>&1) \
-	   || fail "SDL configure failed" "log: $(DEPS_DIR)/$(PLATFORM)-cmake.log"
-	+@$(SH_LIB); $(CMAKE_ENV) cmake --build "$(SDL_BUILD)" --config Release $(if $(V),,>>"$(DEPS_DIR)/$(PLATFORM)-cmake.log" 2>&1) \
-	   || fail "SDL build failed" "log: $(DEPS_DIR)/$(PLATFORM)-cmake.log"; \
+	   $(if $(filter macos,$(PLATFORM_OS)),,-DCMAKE_C_COMPILER="$(TCC)") $(CMAKE_EXTRA) \
+	   || fail "SDL configure failed" "see the cmake output above"
+	+@$(SH_LIB); $(CMAKE_ENV) cmake --build "$(SDL_BUILD)" --config Release \
+	   || fail "SDL build failed" "see the cmake output above"; \
 	cmake --install "$(SDL_BUILD)" --config Release >/dev/null; \
 	[ -f "$@" ] || fail "SDL install did not produce $@"; \
 	say "    SDL $(SDL_VERSION) installed to $(patsubst $(ROOT)/%,%,$(SDL_PREFIX))"; touch "$@"
@@ -793,6 +803,7 @@ $(DIST_BIN): $(DEVBIN) $(PAYLOAD) $(PBUILD)/Sayonara.icns
 	@printf '==> dist: %s\n' "$(patsubst $(ROOT)/%,%,$(DIST_APP))"
 	$(Q)rm -rf $(DIST_APP) && mkdir -p $(DIST_APP)/Contents/MacOS $(DIST_APP)/Contents/Resources
 	$(Q)cp $(DEVBIN) $@ && chmod 755 $@
+	$(Q)if [ "$(HOST_OS)" = macos ]; then strip -S -x $@; fi  # the debug map holds absolute build paths
 	$(Q)cp $(PAYLOAD) $(DIST_APP)/Contents/Resources/game.pak
 	$(Q)if [ -s $(PBUILD)/Sayonara.icns ]; then cp $(PBUILD)/Sayonara.icns $(DIST_APP)/Contents/Resources/Sayonara.icns; fi
 	$(Q){ printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n'; \

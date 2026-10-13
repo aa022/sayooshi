@@ -1,6 +1,6 @@
 // The page: pick the two archives and a target, build, download. All work is in js/build.js.
 import SevenZip from '../vendor/7z-wasm/7zz.es6.js';
-import { buildPayload, assemble } from './build.js';
+import { buildPayload, assemble, appZip } from './build.js';
 import { sha256OfBlob } from './hash.js';
 
 const $ = id => document.getElementById(id);
@@ -33,14 +33,31 @@ async function loadTargets() {
   ready();
 }
 
-// Downloads the payload-free engine of a target and checks it against engines.json.
-async function engineFor(t) {
-  const res = await fetch(t.engine);
-  if (!res.ok) throw new Error(`${t.engine}: HTTP ${res.status}`);
+// Downloads a payload-free engine file ({ engine, size, sha256 }) and checks it against engines.json.
+async function fetchChecked(f) {
+  const res = await fetch(f.engine);
+  if (!res.ok) throw new Error(`${f.engine}: HTTP ${res.status}`);
   const blob = await res.blob();
-  if (blob.size !== t.size || await sha256OfBlob(blob) !== t.sha256)
-    throw new Error(`${t.engine}: the downloaded engine does not match its checksum; reload the page and try again`);
+  if (blob.size !== f.size || await sha256OfBlob(blob) !== f.sha256)
+    throw new Error(`${f.engine}: the downloaded engine does not match its checksum; reload the page and try again`);
   return blob;
+}
+
+// The finished game of a target and whether it is identical to the reference build.
+async function gameFor(t, payload) {
+  progress(`Fetching the ${t.label} engine`, 0, 1);
+  if (t.kind === 'app') {
+    const files = [];
+    for (const f of t.files) files.push({ path: f.path, mode: f.mode, blob: await fetchChecked(f) });
+    let done = 0;
+    const { zip, payloadSha256 } = await appZip(files, payload, t.payload_path,
+      n => progress(`Packing the ${t.label} app`, (done += n), payload.size));
+    return { game: zip, same: payloadSha256 === t.payload_sha256 };
+  }
+  const game = assemble(await fetchChecked(t), payload);
+  let done = 0;
+  const sha = await sha256OfBlob(game, n => progress(`Checking the ${t.label} game`, (done += n), game.size));
+  return { game, same: sha === t.game_sha256 };
 }
 
 function offer(t, blob) {
@@ -48,9 +65,7 @@ function offer(t, blob) {
   a.href = URL.createObjectURL(blob);
   a.download = t.output;
   a.textContent = `${t.output} (${t.label}, ${MiB(blob.size)})`;
-  const li = document.createElement('li');
-  li.append(a);
-  ui.downloads.append(li);
+  ui.downloads.append(a, document.createElement('br'));
 }
 
 async function build() {
@@ -63,11 +78,7 @@ async function build() {
     const payload = await buildPayload({ ja: ui.ja.files[0], en: ui.en.files[0], sevenZip, progress });
     log(`Game data packed: ${payload.count} files, ${MiB(payload.size)}.`);
     for (const t of chosen) {
-      progress(`Fetching the ${t.label} engine`, 0, 1);
-      const game = assemble(await engineFor(t), payload);
-      progress(`Checking the ${t.label} game`, 0, game.size);
-      let done = 0;
-      const same = await sha256OfBlob(game, n => progress(`Checking the ${t.label} game`, (done += n), game.size)) === t.game_sha256;
+      const { game, same } = await gameFor(t, payload);
       log(same ? `${t.label}: ready, identical to the reference build.`
                : `${t.label}: ready, but it differs from the reference build (SHA-256 mismatch).`);
       offer(t, game);

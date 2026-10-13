@@ -1,0 +1,16 @@
+# Netlify: link the repository; no settings needed. tools/site/website.sh assembles build/website:
+# website/ at the root (index, 404), site/ (the builder) under /sayooshi/, stamped with the commit and its date.
+[build]
+  command = "sh tools/site/website.sh"
+  publish = "build/website"
+
+# The engines change only when site/engines/engines.json does; let browsers revalidate them.
+[[headers]]
+  for = "/sayooshi/engines/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"

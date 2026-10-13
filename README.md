@@ -7,6 +7,14 @@ contain no game data.
 
 This project is not affiliated with VisualArt's, or the [English patch's translators](https://x.com/sayooshiENG).
 
+## Screenshots
+
+The same engine runs natively on each platform. The title screen is shown here on macOS and Windows.
+
+| macOS | Windows |
+|---|---|
+| ![The game running on macOS](screenshots/macOS.png) | ![The game running on Windows](screenshots/windows.png) |
+
 ## Required input files
 
 The builder accepts only these two archives in specific. The checksums have to match.
@@ -153,9 +161,12 @@ The web builder in `site/` makes the same executables in the browser. The user s
 The page examines the SHA-256 of each archive. Then the page unpacks the archives in the
 browser tab. The page adds the game data to an engine without game data. The page does not upload files.
 
-- `make site` builds the Linux and Windows engines and puts them into `site/engines/`.
+- `make site` builds the engines this host can make (Linux or macOS, plus Windows) and puts them into
+  `site/engines/`. It keeps the other targets from the last run. Run it on a Mac and on Linux, then commit.
 - `make site-serve` starts a local server at http://localhost:8000.
-- To deploy, upload the `site/` directory as it is. The directory contains `netlify.toml`.
+- `make website` assembles the deployed site in `build/website`: `website/` at the root, the builder under `/sayooshi/`,
+  stamped with the commit hash and its date. `make website-serve` serves it.
+- To deploy, link the repository on Netlify. `netlify.toml` runs `tools/site/website.sh` and publishes `build/website`.
 - For more information, read [site/README.md](site/README.md).
 
 ## Game controls

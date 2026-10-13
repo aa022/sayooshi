@@ -200,3 +200,74 @@ export async function buildPayload({ ja, en, sevenZip, progress = () => {} }) {
 export function assemble(engineBlob, payload) {
   return new Blob([engineBlob, ...payload.parts], { type: 'application/octet-stream' });
 }
+
+// ------------------------------------------------------------------------------------------ macOS app --
+
+// A zip (stored, not compressed) of an app bundle: files [{ path, blob, mode }] plus the payload at payloadPath.
+// Unix modes keep the executable bit; fixed times keep the zip reproducible. The bundle's ad-hoc signature seals
+// game.pak by its hash, so the zip opens to a validly signed app exactly when the payload matches the reference.
+// Returns { zip: Blob, payloadSha256 }; onBytes(n) reports the payload bytes read.
+export async function appZip(files, payload, payloadPath, onBytes = () => {}) {
+  const sha = new Sha256();
+  let crc = 0;
+  for (const part of payload.parts) {
+    const blob = part instanceof Blob ? part : new Blob([part]);
+    for (let at = 0; at < blob.size; at += READ_STEP) {
+      const chunk = new Uint8Array(await blob.slice(at, at + READ_STEP).arrayBuffer());
+      crc = crc32(crc, chunk);
+      sha.update(chunk);
+      onBytes(chunk.length);
+    }
+  }
+  const entries = [];
+  for (const f of files) {
+    const bytes = new Uint8Array(await f.blob.arrayBuffer());
+    entries.push({ path: f.path, mode: 0o100000 | f.mode, parts: [bytes], size: bytes.length, crc: crc32(0, bytes) });
+  }
+  entries.push({ path: payloadPath, mode: 0o100644, parts: payload.parts, size: payload.size, crc });
+  const dirs = new Set();
+  for (const e of entries)
+    for (let i = e.path.indexOf('/'); i > 0; i = e.path.indexOf('/', i + 1)) dirs.add(e.path.slice(0, i + 1));
+  for (const d of dirs) entries.push({ path: d, mode: 0o40755, parts: [], size: 0, crc: 0 });
+  entries.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+
+  const parts = [], central = [];
+  let offset = 0;
+  for (const e of entries) {
+    const name = enc.encode(e.path);
+    const local = new Uint8Array(30 + name.length);
+    const lv = new DataView(local.buffer);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);                  // version needed
+    lv.setUint16(8, 0, true);                   // method: stored
+    lv.setUint16(10, 0, true);                  // time 00:00:00
+    lv.setUint16(12, 0x21, true);               // date 1980-01-01
+    lv.setUint32(14, e.crc, true);
+    lv.setUint32(18, e.size, true);
+    lv.setUint32(22, e.size, true);
+    lv.setUint16(26, name.length, true);
+    local.set(name, 30);
+    const cd = new Uint8Array(46 + name.length);
+    const cv = new DataView(cd.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 0x031e, true);              // made by: Unix, zip 3.0 (external attributes hold the mode)
+    cv.setUint16(6, 20, true);
+    cd.set(local.subarray(8, 28), 10);          // method, time, date, crc, sizes, name length
+    cv.setUint32(38, ((e.mode << 16) | (e.path.endsWith('/') ? 0x10 : 0)) >>> 0, true);
+    cv.setUint32(42, offset, true);
+    cd.set(name, 46);
+    parts.push(local, ...e.parts);
+    central.push(cd);
+    offset += local.length + e.size;
+  }
+  const cdSize = central.reduce((n, c) => n + c.length, 0);
+  const end = new Uint8Array(22);
+  const ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, entries.length, true);
+  ev.setUint16(10, entries.length, true);
+  ev.setUint32(12, cdSize, true);
+  ev.setUint32(16, offset, true);
+  if (offset + cdSize > 0xffffffff) throw new Error('the app is too large for a zip without zip64');
+  return { zip: new Blob([...parts, ...central, end], { type: 'application/zip' }), payloadSha256: sha.hex() };
+}

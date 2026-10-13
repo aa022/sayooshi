@@ -5,7 +5,7 @@ This folder holds a single web page. The page uses two archives that the user su
 - the user's own copy of *Sayonara o Oshiete ~Comment te Dire Adieu~* (JA download edition zip);
 - the English patch v1.1 zip.
 
-The page makes one self-contained game executable for Linux or Windows from these archives. All
+The page makes one self-contained game for Linux, Windows or macOS from these archives. All
 steps run in the browser. No file leaves the user's machine.
 
 This folder holds **no game data**. It holds only these items:
@@ -24,7 +24,9 @@ This folder holds **no game data**. It holds only these items:
 4. The page puts the files in the same data tree as `make data`. It packs the data tree into a
    SAYOPAK payload (docs/PAYLOAD.md).
 5. The page appends the payload to the selected engine from `engines/`. It first verifies the
-   engine against `engines/engines.json`.
+   engine against `engines/engines.json`. For macOS, the page instead zips the staged app bundle
+   with the payload as `Contents/Resources/game.pak`. The bundle's ad-hoc signature seals
+   `game.pak` by its hash. The page builds the identical file, so the signature stays valid.
 6. The page checks the finished game against the SHA-256 of the reference build. Then it offers the
    game for download.
 
@@ -34,18 +36,20 @@ builds are reproducible. `make site-test` proves this in Node and in headless Ch
 ## Update and deploy
 
 ```
-make site          # builds Linux + Windows, strips their payloads into site/engines/, writes engines.json
+make site          # builds this host + Windows, stages their payload-free engines in site/engines/, writes engines.json
 make site-test     # Node + headless-Chromium checks against dist/
 make site-serve    # http://localhost:8000
+make website       # build/website: website/ at the root, this folder under /sayooshi/, stamped with the commit and its date
+make website-serve # http://localhost:8000/sayooshi/
 ```
 
-Deploy the `site/` folder as it is. On Netlify, use one of these methods:
+`make site` stages what this host builds: Linux on Linux, macOS on a Mac, Windows on both. It keeps
+the other targets from the last `make site` if their staged files are unchanged. So run `make site`
+on a Mac and on a Linux machine, and commit both results.
 
-- Drag and drop the folder.
-- Run `netlify deploy --dir site --prod`.
-- Link the repository and set the base directory to `site/`.
-
-`netlify.toml` needs no build command.
+The site is https://ak1122.cc/sayooshi. To deploy, commit the result of `make site` and push. Netlify
+runs `tools/site/website.sh` and publishes `build/website` (`netlify.toml` in the repository root). For a
+manual deploy, run `make website`, then `netlify deploy --dir build/website --prod`.
 
 Serve the folder over HTTP(S). If you open `index.html` from the disk, the page cannot load the
 modules and the WebAssembly.
@@ -67,5 +71,6 @@ Browser requirements:
   (https://github.com/use-strict/7z-wasm), not modified. GNU LGPL with the unRAR restriction
   (`licenses/7-Zip.txt`, `licenses/7-Zip-unRAR.txt`). Source: https://www.7-zip.org and the
   repository above.
+- `favicon.ico` is the game's icon, the same one the Windows engine embeds.
 - The game and the English patch belong to their owners. This folder never includes them. Users
   supply their own copies.
