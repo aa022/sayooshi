@@ -17,10 +17,10 @@
       "engine": "engines/Sayonara-windows-x86_64.exe",
       "output": "Sayonara.exe",
       "dist": "dist/windows-x86_64/Sayonara.exe",
-      "size": 6237184,
-      "sha256": "95c23ea97f7cb5813d8cb48b951388788f991564c9ba3f451272dd51fcc2a247",
-      "game_size": 598440163,
-      "game_sha256": "18c079940d61907d69530f337fce0ac089d3bf95ead4d606202d6b0ffe785844"
+      "size": 6202880,
+      "sha256": "8a53cfd91f10d560c9173bbec02c5db4942f401d90f8d3bdbb023336f0c4f0ac",
+      "game_size": 598405859,
+      "game_sha256": "9509de32a5954c68cefb209c523fe2f86a31c49ddc3cb51ec0cebdd40eac3d7f"
     },
     {
       "id": "macos-universal",
